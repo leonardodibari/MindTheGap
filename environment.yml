@@ -1,0 +1,9 @@
+name: mindthegap
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - joblib
+  - numpy<2
+  - rdkit=2023.09.1
+  - pip
