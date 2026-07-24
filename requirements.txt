@@ -1,3 +1,7 @@
 joblib
+matplotlib
 numpy<2
+pandas
 rdkit==2023.9.1
+scikit-learn
+jupyter

@@ -4,6 +4,10 @@ channels:
 dependencies:
   - python=3.11
   - joblib
+  - jupyter
+  - matplotlib
   - numpy<2
+  - pandas
   - rdkit=2023.09.1
+  - scikit-learn
   - pip
