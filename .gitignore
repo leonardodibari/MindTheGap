@@ -20,6 +20,11 @@ artifacts/
 models/
 outputs/
 
+# Keep the compact best neural checkpoints requested by the modeling notebooks.
+!results/models/
+!results/models/schnet_best_random.pt
+!results/models/schnet_best_scaffold.pt
+
 # The supplied dataset is 192 MB and exceeds GitHub's 100 MB file limit.
 # Keep it locally at datasets/base.csv.
 datasets/*.csv
