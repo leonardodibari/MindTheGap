@@ -1,4 +1,5 @@
 joblib
+lightgbm>=4.6
 matplotlib
 numpy<2
 pandas
