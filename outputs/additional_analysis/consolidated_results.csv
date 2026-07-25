@@ -1,0 +1,30 @@
+split,model,samples,mean_residual,mae,rmse,median_absolute_error,absolute_error_p90,analysis,validation_mae,test_mae,training_time_seconds,similarity_bin,similarity_midpoint,signed_residual_pearson,signed_residual_spearman,absolute_error_pearson,absolute_error_spearman,lightgbm_lower_error_proportion,schnet_lower_error_proportion,tie_proportion,comparison,first_model,second_model,mean_paired_difference,ci_low,ci_high,bootstrap_proportion_favoring_second
+random,LightGBM,8571.0,-0.003164088291469921,0.014260757381401994,0.3672942341319482,0.00722801967410569,0.022923214420962512,residual_metrics,,,,,,,,,,,,,,,,,,,
+random,SchNet,8571.0,-0.0027569434046202305,0.014571942562244778,0.36691092447177587,0.008367260000000043,0.022013329999999998,residual_metrics,,,,,,,,,,,,,,,,,,,
+random,Ensemble,8571.0,-0.0029768016435190786,0.013131476721298628,0.36704885693529427,0.006897920578349426,0.019323024897290292,residual_metrics,,,,,,,,,,,,,,,,,,,
+scaffold,LightGBM,8571.0,-0.005459875853640785,0.021820784058578534,0.5152996236288312,0.009394444152557135,0.02860183204052011,residual_metrics,,,,,,,,,,,,,,,,,,,
+scaffold,SchNet,8571.0,-0.009449788390502858,0.019954336153891025,0.5147546030114992,0.009518539999999992,0.02435323999999997,residual_metrics,,,,,,,,,,,,,,,,,,,
+scaffold,Ensemble,8571.0,-0.00729523343669564,0.019681339121905787,0.5149851385114447,0.008597303234519404,0.023824862316301376,residual_metrics,,,,,,,,,,,,,,,,,,,
+random,Complete feature set,,,,,,,feature_ablation,0.013885612340042285,0.014260757453019362,18.20561695098877,,,,,,,,,,,,,,,,
+random,RDKit physicochemical descriptors,,,,,,,feature_ablation,0.014131979856778203,0.014442494214182474,4.084126182016917,,,,,,,,,,,,,,,,
+random,Morgan fingerprints,,,,,,,feature_ablation,0.017712475524915335,0.01799208138031864,7.089957976015285,,,,,,,,,,,,,,,,
+random,Size/count descriptors,,,,,,,feature_ablation,0.02105952456923602,0.021430359675080682,5.144328785012476,,,,,,,,,,,,,,,,
+random,Simple 3D geometry,,,,,,,feature_ablation,0.0320238767647396,0.032739759310531164,2.67638065997744,,,,,,,,,,,,,,,,
+scaffold,LightGBM,2152.0,,0.017636377652545394,,,,chemical_novelty,,,,"(0.157, 0.303]",0.22999999999999998,,,,,,,,,,,,,,
+scaffold,SchNet,2152.0,,0.013986169846654274,,,,chemical_novelty,,,,"(0.157, 0.303]",0.22999999999999998,,,,,,,,,,,,,,
+scaffold,Ensemble,2152.0,,0.014613854939740439,,,,chemical_novelty,,,,"(0.157, 0.303]",0.22999999999999998,,,,,,,,,,,,,,
+scaffold,LightGBM,2166.0,,0.029566441508467323,,,,chemical_novelty,,,,"(0.303, 0.344]",0.3235,,,,,,,,,,,,,,
+scaffold,SchNet,2166.0,,0.027687557767774703,,,,chemical_novelty,,,,"(0.303, 0.344]",0.3235,,,,,,,,,,,,,,
+scaffold,Ensemble,2166.0,,0.02725642805161773,,,,chemical_novelty,,,,"(0.303, 0.344]",0.3235,,,,,,,,,,,,,,
+scaffold,LightGBM,2116.0,,0.012192549343937336,,,,chemical_novelty,,,,"(0.344, 0.389]",0.3665,,,,,,,,,,,,,,
+scaffold,SchNet,2116.0,,0.011281557155009453,,,,chemical_novelty,,,,"(0.344, 0.389]",0.3665,,,,,,,,,,,,,,
+scaffold,Ensemble,2116.0,,0.01055788678226883,,,,chemical_novelty,,,,"(0.344, 0.389]",0.3665,,,,,,,,,,,,,,
+scaffold,LightGBM,2137.0,,0.02771741166995195,,,,chemical_novelty,,,,"(0.389, 0.857]",0.623,,,,,,,,,,,,,,
+scaffold,SchNet,2137.0,,0.026713782218062698,,,,chemical_novelty,,,,"(0.389, 0.857]",0.623,,,,,,,,,,,,,,
+scaffold,Ensemble,2137.0,,0.026140304254772217,,,,chemical_novelty,,,,"(0.389, 0.857]",0.623,,,,,,,,,,,,,,
+random,,,,,,,,error_complementarity,,,,,,0.9992433190938164,0.4955140310867149,0.9995313525155659,0.24377947608375136,0.5330766538326916,0.46692334616730835,0.0,,,,,,,
+scaffold,,,,,,,,error_complementarity,,,,,,0.9995315286633646,0.5725122734350655,0.9996600095278186,0.27858214584324203,0.48384085870960214,0.5161591412903979,0.0,,,,,,,
+random,,,,,,,,paired_bootstrap,,,,,,,,,,,,,LightGBM minus SchNet,LightGBM,SchNet,-0.00031118518084278374,-0.0005606808336342656,-5.406959882518906e-05,0.004
+random,,,,,,,,paired_bootstrap,,,,,,,,,,,,,Best individual minus Ensemble,LightGBM,Ensemble,0.001129280660103366,0.0010013545695618962,0.001261074606350846,1.0
+scaffold,,,,,,,,paired_bootstrap,,,,,,,,,,,,,LightGBM minus SchNet,LightGBM,SchNet,0.0018664479046875092,0.001578510646915621,0.0021530678688354223,1.0
+scaffold,,,,,,,,paired_bootstrap,,,,,,,,,,,,,Best individual minus Ensemble,SchNet,Ensemble,0.0002729970319852379,0.00010052945875001691,0.0004402881810168154,0.998
