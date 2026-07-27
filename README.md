@@ -93,15 +93,27 @@ Notebooks 01–03 generate the EDA, feature, split, model, metric, and predictio
 
 ## Installation
 
-Python 3.11 is specified in `environment.yml`. From the repository root:
+The repository was developed and tested with Python 3.11. Clone the private repository and enter its root directory first:
+
+```bash
+git clone <repository-url>
+cd MindTheGap
+```
+
+### Recommended: Conda
+
+Create the project-local environment from the supplied `environment.yml`:
 
 ```bash
 conda env create --prefix ./.venv -f environment.yml
 conda activate ./.venv
-jupyter notebook
 ```
 
-The Conda specification installs RDKit and the scientific Python stack, then installs PyTorch and PyTorch Geometric through pip. A pip-only dependency list is also provided:
+This installs Python 3.11, RDKit, the scientific Python stack, PyTorch, and PyTorch Geometric.
+
+### Alternative: pip
+
+The same declared dependencies are available in `requirements.txt` for reviewers who prefer a Python 3.11 virtual environment:
 
 ```bash
 python3.11 -m venv .venv
@@ -109,24 +121,52 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-CUDA is optional. SchNet uses a GPU when available and otherwise runs on CPU, which is substantially slower.
+CUDA is optional. SchNet selects a CUDA device when available and automatically falls back to CPU otherwise.
+
+## Quick Start
+
+1. Clone the repository with `git clone <repository-url>` and run `cd MindTheGap`.
+2. Create and activate the recommended Conda environment using the commands above.
+3. Place the dataset supplied with the assignment at `datasets/base.csv`.
+4. From the repository root, launch Jupyter:
+
+   ```bash
+   jupyter notebook
+   ```
+
+5. Execute the notebooks in order:
+
+   ```text
+   01 → 02 → 03 → 04 → 05
+   ```
+
+For a fast review using the submitted models and predictions, execute only:
+
+```text
+04 → 05
+```
+
+This fast path regenerates the final and supplementary analyses without retraining LightGBM or SchNet.
+
+## System Requirements
+
+- Python 3.11.
+- A CUDA-capable GPU is optional but recommended for notebook 03; all notebooks support CPU execution.
+- Allow roughly 3 GB for the environment, supplied dataset, current artifacts, and caches. Additional temporary working space is advisable when regenerating the full workflow.
 
 ## Dataset
 
-The supplied data are expected at `datasets/base.csv`. The current local file contains 116,492 rows and 22 source columns; 57,136 rows have a non-missing `gap`. The loader normalizes the CSV's index-like first column to `mol_id` and requires `json_conformer` and `gap`.
+Place the original dataset supplied with the assignment at `datasets/base.csv`. The repository expects exactly this file; no external download is required or assumed.
 
-`base.csv` is intentionally excluded by `.gitignore` because its approximately 192 MB size exceeds GitHub's per-file limit. A reviewer cloning the repository must place the original supplied file at the path above. No external download URL is assumed.
+The dataset is intentionally excluded from Git because it exceeds GitHub's per-file size limit. It must therefore be copied into `datasets/` after cloning and before running any notebook.
 
 ## Running the Project
 
 ### Full Reproduction
 
-1. Create and activate the environment.
-2. Place the supplied dataset at `datasets/base.csv`.
-3. Start Jupyter from the repository root.
-4. Run notebooks `01`, `02`, `03`, `04`, and `05` in order.
+After completing the Quick Start setup, run all five notebooks in order. Notebook 01 creates the exploratory outputs, notebook 02 trains the classical models, and notebook 03 trains SchNet. Notebooks 04 and 05 then load those saved artifacts to produce the final and supplementary analyses.
 
-Notebook 02 trains the classical models and writes their artifacts. Notebook 03 trains SchNet and writes its checkpoints and predictions. Feature and graph caches are regenerated when absent. Notebook 03 is the computationally expensive stage, particularly on CPU.
+Feature and graph caches are regenerated when absent. This is the appropriate workflow for reproducing the complete submission from the supplied raw dataset.
 
 ### Fast Review
 
@@ -136,7 +176,14 @@ With the submitted artifacts present, run:
 04 → 05
 ```
 
-This path uses `datasets/base.csv`, `results/split_indices.npz`, the classical feature cache, both models' metric files, and the four random/scaffold prediction files in `results/`. It reproduces the final comparison and supplementary analysis without model retraining.
+This path uses `datasets/base.csv`, `results/split_indices.npz`, the classical feature cache, both models' metric files, and the four random/scaffold prediction files in `results/`. Missing inputs produce an actionable error naming the notebook that generates them.
+
+## Runtime Expectations
+
+- **Notebook 01:** relatively quick exploratory analysis and deterministic preprocessing.
+- **Notebook 02:** typically a few minutes, depending on CPU resources and whether feature caches already exist.
+- **Notebook 03:** the most computationally expensive stage; a CUDA GPU is recommended. CPU execution is supported but substantially slower.
+- **Notebooks 04–05:** quick artifact-based analysis with no main-model retraining.
 
 ## Results
 
