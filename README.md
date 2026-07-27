@@ -29,6 +29,8 @@ MindTheGap/
 │   ├── figures/eda/             # Exploratory-analysis figures
 │   └── tables/                  # EDA and molecular-metadata tables
 ├── requirements.txt
+├── scripts/
+│   └── audit_rdkit_compatibility.py
 ├── results/
 │   ├── figures/                 # Classical and SchNet diagnostics
 │   ├── final_figures/           # Presentation-ready comparison figures
@@ -41,6 +43,7 @@ MindTheGap/
 │   ├── final_predictions_random_test.csv
 │   ├── final_predictions_scaffold_test.csv
 │   ├── final_predictions_validation.csv
+│   ├── rdkit_2026_remove_hs_failures.csv
 │   ├── schnet_metrics.csv
 │   ├── schnet_predictions_random.csv
 │   ├── schnet_predictions_scaffold.csv
@@ -65,7 +68,7 @@ MindTheGap/
 ## Methodology
 
 1. **Exploratory data analysis.** Validate the schema, labeled/unlabeled rows, missingness, duplicates, target scale and extremes, molecular composition, geometry, fingerprint sparsity, similarity, and scaffold diversity. Auxiliary target columns are explicitly identified as leakage risks.
-2. **Feature engineering.** Parse molecular JSON with RDKit and derive size/composition counts, bond types, simple 3D geometry, RDKit 2D descriptors, radius-2 2048-bit Morgan fingerprints, and Bemis–Murcko scaffolds. Expensive deterministic representations are cached with a dataset-dependent key.
+2. **Feature engineering.** Parse molecular JSON through a shared, context-rich RDKit compatibility layer and derive size/composition counts, bond types, simple 3D geometry, RDKit 2D descriptors, radius-2 2048-bit Morgan fingerprints, and Bemis–Murcko scaffolds. Expensive deterministic representations use stable cache names and are accepted only when their stored ordered-molecule-ID hash matches the dataset.
 3. **Classical machine learning.** Compare a mean predictor, Ridge models, and LightGBM models using size/composition, RDKit descriptors, Morgan fingerprints, and a combined 2D/3D representation. Preprocessing is contained in scikit-learn pipelines, with limited selection on validation MAE.
 4. **SchNet.** Train a PyTorch Geometric SchNet from atomic numbers, Cartesian coordinates, and molecule batch membership. Training uses MAE loss, deterministic seeding, validation monitoring, early stopping, and saved best checkpoints.
 5. **Ensemble.** Combine the selected LightGBM and SchNet predictions as `w × SchNet + (1 − w) × LightGBM`. The weight is chosen on validation predictions only and then fixed for test evaluation.
@@ -88,13 +91,13 @@ Notebooks 01–03 generate the EDA, feature, split, model, metric, and predictio
 | --- | --- | --- | --- | --- |
 | `01_preliminary_data_analysis.ipynb` | Data quality, target, molecular diversity, leakage, and pre-modeling validation | `datasets/base.csv` | `outputs/tables/`, `outputs/figures/eda/` | No |
 | `02_classical_baselines.ipynb` | Construct conformer-derived features; select and evaluate classical baselines | Labeled rows in `datasets/base.csv` | Temporary `outputs/cache/classical_*`, stable `outputs/artifacts/classical_analysis_*`, split indices, models, predictions, metrics, and diagnostics | Yes |
-| `03_schnet.ipynb` | Select, train, and evaluate SchNet; compare against saved classical predictions | Dataset, split indices, classical predictions/metrics, graph cache if available | `outputs/cache/schnet_graphs_*`, SchNet checkpoints, predictions, metrics, and diagnostics | Yes—SchNet only |
+| `03_schnet.ipynb` | Select, train, and evaluate SchNet; compare against saved classical predictions | Dataset, split indices, classical predictions/metrics, graph cache if available | `outputs/cache/schnet_graphs.pt`, SchNet checkpoints, predictions, metrics, and diagnostics | Yes—SchNet only |
 | `04_final_analysis.ipynb` | Align both models, analyze errors, select the ensemble weight, and produce final comparisons | Dataset and committed split/features/predictions/metrics | Final prediction tables, `results/final_model_comparison.csv`, `results/final_figures/`, and `results/final_conclusions.md` | No |
 | `05_additional_results_analysis.ipynb` | Technical appendix for robustness, subgroup, bootstrap, and worst-case analysis | Dataset, committed final predictions/metrics and analysis features | Tables and figures in `outputs/additional_analysis/` | No; the saved fixed-configuration ablation is loaded |
 
 ## Installation
 
-The repository was developed and tested with Python 3.11. Clone the private repository and enter its root directory first:
+The repository was developed and end-to-end tested with Python 3.11.15, RDKit 2023.09.1, NumPy 1.26.4, scikit-learn 1.9.0, LightGBM 4.7.0, PyTorch 2.13.0 (CPU), and PyTorch Geometric 2.8.0.post1. Clone the private repository and enter its root directory first:
 
 ```bash
 git clone https://github.com/leonardodibari/MindTheGap.git
@@ -110,7 +113,7 @@ conda env create --prefix ./.venv -f environment.yml
 conda activate ./.venv
 ```
 
-This installs Python 3.11, RDKit, the scientific Python stack, PyTorch, and PyTorch Geometric.
+This installs the tested versions of Python, RDKit, the scientific Python stack, CPU PyTorch, and PyTorch Geometric. Conda is the reference installation route; it avoids pip selecting large CUDA support packages for PyTorch on machines that do not need them.
 
 ### Alternative: pip
 
@@ -181,9 +184,9 @@ Notebook 04 validates the dataset against the committed ordered-molecule-ID hash
 
 ## Runtime Expectations
 
-- **Notebook 01:** relatively quick exploratory analysis and deterministic preprocessing.
-- **Notebook 02:** typically a few minutes, depending on CPU resources and whether feature caches already exist.
-- **Notebook 03:** the most computationally expensive stage; a CUDA GPU is recommended. CPU execution is supported but substantially slower.
+- **Notebook 01:** roughly 2 minutes for exploratory analysis and deterministic preprocessing on the verification CPU.
+- **Notebook 02:** roughly 10–15 minutes from an empty cache on the verification CPU; cached reruns are faster.
+- **Notebook 03:** the most computationally expensive stage; roughly 40 minutes in the verified CPU-only run. A CUDA GPU can be faster but may introduce small platform-dependent numerical variation.
 - **Notebooks 04–05:** quick artifact-based analysis with no main-model retraining.
 
 ## Results
@@ -209,6 +212,7 @@ The ensemble uses the validation-selected SchNet weight `w = 0.46`. The same fix
 - `results/classical_predictions_random.csv` and `classical_predictions_scaffold.csv`: aligned classical validation/test predictions.
 - `results/schnet_predictions_random.csv` and `schnet_predictions_scaffold.csv`: aligned SchNet validation/test predictions.
 - `results/final_predictions_validation.csv` and `final_predictions_*_test.csv`: aligned model/ensemble predictions used by the final analyses.
+- `results/rdkit_2026_remove_hs_failures.csv`: exhaustive audit of the 377 rows that fail at `RemoveHs` under RDKit 2026.03.4 (192 labeled and 185 unlabeled); all pass under the pinned RDKit 2023.09.1 environment.
 - `results/classical_baselines.csv`, `schnet_metrics.csv`, and `final_model_comparison.csv`: experiment and consolidated metrics.
 - `outputs/cache/`: ignored temporary dense features, fingerprints, and serialized graphs; these are not fast-review inputs.
 - `results/figures/`, `results/final_figures/`, and `outputs/additional_analysis/`: diagnostic, presentation, and technical-appendix outputs.
@@ -227,3 +231,4 @@ The ensemble uses the validation-selected SchNet weight `w = 0.46`. The same fix
 - All predictive inputs are derived from `json_conformer`. Other molecular-property columns are excluded to avoid target leakage.
 - Scaffold evaluation is a robustness experiment for chemical novelty, not a guarantee of performance on every out-of-domain chemistry regime.
 - PyTorch/CUDA operations can exhibit small platform-dependent numerical variation despite deterministic seeding.
+- RDKit 2026.03.4 raises `AtomValenceException` during hydrogen removal for 377 supplied conformers. The project therefore pins RDKit 2023.09.1, for which the repository-wide parser audit reports zero failures across all 116,492 rows. Run `python scripts/audit_rdkit_compatibility.py --dataset datasets/base.csv --output /tmp/rdkit_audit.csv` to repeat the audit in another environment.

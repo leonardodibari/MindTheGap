@@ -13,7 +13,7 @@ from rdkit.Chem import Descriptors
 from rdkit.Chem.Scaffolds import MurckoScaffold
 from rdkit.ML.Descriptors.MoleculeDescriptors import MolecularDescriptorCalculator
 
-from .loaders import MolecularGraph, mol_json_to_fingerprint
+from .loaders import MolecularGraph, mol_from_json, mol_json_to_fingerprint, remove_hydrogens
 
 ELEMENTS = ("H", "C", "N", "O", "F")
 BOND_TYPES = (1.0, 1.5, 2.0, 3.0)
@@ -87,7 +87,7 @@ def graph_metadata(graph: MolecularGraph) -> dict[str, float | int]:
 
 def scaffold_smiles(json_conformer: str) -> str:
     """Return the canonical Bemis–Murcko scaffold, or ``''`` for acyclic molecules."""
-    molecule = Chem.RemoveHs(Chem.JSONToMols(json_conformer)[0])
+    molecule = remove_hydrogens(mol_from_json(json_conformer), context="scaffold molecule")
     return Chem.MolToSmiles(MurckoScaffold.GetScaffoldForMol(molecule), canonical=True)
 
 
@@ -100,7 +100,7 @@ def molecule_features(
 ) -> tuple[list[float], list[float], tuple[float, ...], str]:
     """Compute the exact size, 3D, RDKit-2D, and scaffold features used in notebook 02."""
     calculator = calculator or MolecularDescriptorCalculator(list(RDKIT_DESCRIPTOR_NAMES))
-    mol_with_h = Chem.JSONToMols(json_conformer)[0]
+    mol_with_h = mol_from_json(json_conformer, context="classical feature molecule")
     atoms = [atom.GetSymbol() for atom in mol_with_h.GetAtoms()]
     atom_counts = Counter(atoms)
     bond_counts = Counter(float(bond.GetBondTypeAsDouble()) for bond in mol_with_h.GetBonds())
@@ -120,7 +120,7 @@ def molecule_features(
                         for b in mol_with_h.GetBonds()])
     geometry = [radius, float(lengths.mean()) if len(lengths) else np.nan,
                 float(lengths.std()) if len(lengths) else np.nan, max_distance, *eigenvalues]
-    mol_2d = Chem.RemoveHs(mol_with_h)
+    mol_2d = remove_hydrogens(mol_with_h, context="classical feature molecule")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         descriptors = calculator.CalcDescriptors(mol_2d)
@@ -132,4 +132,3 @@ def compute_morgan_fingerprints(
 ) -> np.ndarray:
     """Compute Morgan fingerprints without changing radius, length, or ordering."""
     return mol_json_to_fingerprint(conformers, radius=radius, n_bits=n_bits, n_jobs=n_jobs)
-

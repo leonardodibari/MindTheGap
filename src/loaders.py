@@ -5,10 +5,42 @@ from typing import Generator, Sequence, TypeVar
 
 import joblib
 import numpy as np
+import rdkit
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
 _T = TypeVar("_T")
+
+
+def mol_from_json(value: str, *, context: str = "molecule") -> Chem.Mol:
+    """Reconstruct one supplied conformer with an actionable compatibility error."""
+    try:
+        molecules = Chem.JSONToMols(value)
+    except Exception as exc:
+        raise ValueError(
+            f"Could not reconstruct {context} with RDKit {rdkit.__version__}. "
+            "This project requires the RDKit version pinned in environment.yml."
+        ) from exc
+    if len(molecules) != 1:
+        raise ValueError(f"Expected one molecule for {context}, found {len(molecules)}")
+    molecule = molecules[0]
+    if molecule.GetNumConformers() != 1:
+        raise ValueError(
+            f"Expected one conformer for {context}, found {molecule.GetNumConformers()}"
+        )
+    return molecule
+
+
+def remove_hydrogens(molecule: Chem.Mol, *, context: str = "molecule") -> Chem.Mol:
+    """Remove explicit hydrogens using the scientifically supported RDKit behavior."""
+    try:
+        return Chem.RemoveHs(molecule)
+    except Exception as exc:
+        raise ValueError(
+            f"Could not sanitize {context} while removing hydrogens with RDKit "
+            f"{rdkit.__version__}. Install the environment.yml pins; permissive parsing "
+            "would change descriptors, fingerprints, and scaffolds."
+        ) from exc
 
 
 def _mol_chunk_to_fingerprint(
@@ -18,7 +50,7 @@ def _mol_chunk_to_fingerprint(
 ) -> np.ndarray:
     fp = [
         AllChem.GetMorganFingerprintAsBitVect(
-            Chem.RemoveHs(mol),
+            remove_hydrogens(mol),
             radius=radius,
             nBits=n_bits,
         )
@@ -53,7 +85,8 @@ def mol_json_to_fingerprint(
     Returns:
         A (N, n_bits) numpy array of fingerprints for each input JSON
     """
-    molecules = [Chem.JSONToMols(js)[0] for js in batch_json]
+    molecules = [mol_from_json(js, context=f"fingerprint row {index}")
+                 for index, js in enumerate(batch_json)]
     if not len(molecules):
         chunks = []
     else:
@@ -95,7 +128,7 @@ class MolecularGraph:
 
     @classmethod
     def from_mol_json(cls, json: str) -> "MolecularGraph":
-        mol = Chem.JSONToMols(json)[0]
+        mol = mol_from_json(json)
         return cls(
             atom_types=np.array(
                 [atom.GetSymbol() for atom in mol.GetAtoms()], dtype="U2"

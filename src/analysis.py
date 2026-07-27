@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 from rdkit import Chem
 
+from .loaders import mol_from_json, remove_hydrogens
+
 
 def missing_patterns(frame: pd.DataFrame, top_n: int = 10) -> pd.DataFrame:
     """Count the most frequent row-wise missingness patterns."""
@@ -107,7 +109,10 @@ def build_prediction_frame(
     for column, values in zip(geometry_names, geometry_matrix[test_indices].T):
         frame[column] = values
     frame["smiles"] = [
-        Chem.MolToSmiles(Chem.RemoveHs(Chem.JSONToMols(value)[0]), canonical=True)
+        Chem.MolToSmiles(
+            remove_hydrogens(mol_from_json(value), context="final-analysis molecule"),
+            canonical=True,
+        )
         for value in molecule_table.iloc[test_indices]["json_conformer"]
     ]
     frame["split"] = split
