@@ -96,7 +96,7 @@ Notebooks 01–03 generate the EDA, feature, split, model, metric, and predictio
 The repository was developed and tested with Python 3.11. Clone the private repository and enter its root directory first:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/leonardodibari/MindTheGap.git
 cd MindTheGap
 ```
 
