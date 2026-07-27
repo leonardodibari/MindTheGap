@@ -1,17 +1,19 @@
 name: mindthegap
+
 channels:
   - conda-forge
+
 dependencies:
   - python=3.11
+  - pip
   - joblib
-  - jupyter
-  - lightgbm>=4.6
+  - jupyterlab
+  - lightgbm
   - matplotlib
   - numpy<2
   - pandas
-  - rdkit=2023.09.1
+  - rdkit
   - scikit-learn
-  - pip
   - pip:
       - torch
       - torch-geometric

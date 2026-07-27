@@ -125,7 +125,7 @@ CUDA is optional. SchNet selects a CUDA device when available and automatically 
 
 ## Quick Start
 
-1. Clone the repository with `git clone <repository-url>` and run `cd MindTheGap`.
+1. Clone the repository with `git clone https://github.com/leonardodibari/MindTheGap.git` and run `cd MindTheGap`.
 2. Create and activate the recommended Conda environment using the commands above.
 3. Place the dataset supplied with the assignment at `datasets/base.csv`.
 4. From the repository root, launch Jupyter:
