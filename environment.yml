@@ -14,6 +14,7 @@ dependencies:
   - pandas
   - rdkit
   - scikit-learn
+  - scipy
   - pip:
       - torch
       - torch-geometric

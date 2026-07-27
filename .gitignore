@@ -28,6 +28,9 @@ outputs/
 # Keep the compact, presentation-ready additional-analysis artifacts.
 !outputs/
 outputs/*
+!outputs/artifacts/
+!outputs/artifacts/classical_analysis_features.npz
+!outputs/artifacts/classical_analysis_morgan.npz
 !outputs/additional_analysis/
 !outputs/additional_analysis/**
 

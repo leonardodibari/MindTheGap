@@ -24,7 +24,8 @@ MindTheGap/
 │   └── 05_additional_results_analysis.ipynb
 ├── outputs/
 │   ├── additional_analysis/     # Supplementary tables and figures
-│   ├── cache/                   # Dataset-keyed descriptors, fingerprints, and graphs
+│   ├── artifacts/               # Committed compact inputs for notebooks 04–05
+│   ├── cache/                   # Ignored, regenerable descriptors, fingerprints, and graphs
 │   ├── figures/eda/             # Exploratory-analysis figures
 │   └── tables/                  # EDA and molecular-metadata tables
 ├── requirements.txt
@@ -79,17 +80,17 @@ The intended execution order is:
 01 → 02 → 03 → 04 → 05
 ```
 
-Notebooks 01–03 generate the EDA, feature, split, model, metric, and prediction artifacts. Notebooks 04 and 05 consume previously generated artifacts: they do not construct or retrain the main LightGBM or SchNet models. Required-artifact checks report the missing path, the notebook that creates it, and the required execution order.
+Notebooks 01–03 generate the EDA, feature, split, model, metric, and prediction artifacts. Notebooks 04 and 05 consume the compact artifacts committed to this repository: they do not construct or retrain the LightGBM or SchNet models. Required-artifact checks distinguish a file unexpectedly missing from a clone from an input generated during full reproduction.
 
 ## Notebook Description
 
 | Notebook | Purpose | Required inputs | Principal outputs | Model training |
 | --- | --- | --- | --- | --- |
 | `01_preliminary_data_analysis.ipynb` | Data quality, target, molecular diversity, leakage, and pre-modeling validation | `datasets/base.csv` | `outputs/tables/`, `outputs/figures/eda/` | No |
-| `02_classical_baselines.ipynb` | Construct conformer-derived features; select and evaluate classical baselines | Labeled rows in `datasets/base.csv` | `outputs/cache/classical_*`, `results/split_indices.npz`, classical model files, predictions, metrics, and diagnostics | Yes |
+| `02_classical_baselines.ipynb` | Construct conformer-derived features; select and evaluate classical baselines | Labeled rows in `datasets/base.csv` | Temporary `outputs/cache/classical_*`, stable `outputs/artifacts/classical_analysis_*`, split indices, models, predictions, metrics, and diagnostics | Yes |
 | `03_schnet.ipynb` | Select, train, and evaluate SchNet; compare against saved classical predictions | Dataset, split indices, classical predictions/metrics, graph cache if available | `outputs/cache/schnet_graphs_*`, SchNet checkpoints, predictions, metrics, and diagnostics | Yes—SchNet only |
-| `04_final_analysis.ipynb` | Align both models, analyze errors, select the ensemble weight, and produce final comparisons | Dataset, split/feature artifacts, classical and SchNet predictions/metrics | Final prediction tables, `results/final_model_comparison.csv`, `results/final_figures/`, and `results/final_conclusions.md` | No |
-| `05_additional_results_analysis.ipynb` | Technical appendix for robustness, subgroup, bootstrap, and worst-case analysis | Final predictions/metrics and deterministic feature caches | Tables and figures in `outputs/additional_analysis/` | No; the saved fixed-configuration ablation is loaded |
+| `04_final_analysis.ipynb` | Align both models, analyze errors, select the ensemble weight, and produce final comparisons | Dataset and committed split/features/predictions/metrics | Final prediction tables, `results/final_model_comparison.csv`, `results/final_figures/`, and `results/final_conclusions.md` | No |
+| `05_additional_results_analysis.ipynb` | Technical appendix for robustness, subgroup, bootstrap, and worst-case analysis | Dataset, committed final predictions/metrics and analysis features | Tables and figures in `outputs/additional_analysis/` | No; the saved fixed-configuration ablation is loaded |
 
 ## Installation
 
@@ -140,13 +141,13 @@ CUDA is optional. SchNet selects a CUDA device when available and automatically 
    01 → 02 → 03 → 04 → 05
    ```
 
-For a fast review using the submitted models and predictions, execute only:
+For a fast review using the submitted compact analysis artifacts, execute only:
 
 ```text
 04 → 05
 ```
 
-This fast path regenerates the final and supplementary analyses without retraining LightGBM or SchNet.
+This fast path regenerates the final and supplementary analyses without loading or retraining LightGBM or SchNet. The only manually supplied file is `datasets/base.csv`.
 
 ## System Requirements
 
@@ -166,17 +167,17 @@ The dataset is intentionally excluded from Git because it exceeds GitHub's per-f
 
 After completing the Quick Start setup, run all five notebooks in order. Notebook 01 creates the exploratory outputs, notebook 02 trains the classical models, and notebook 03 trains SchNet. Notebooks 04 and 05 then load those saved artifacts to produce the final and supplementary analyses.
 
-Feature and graph caches are regenerated when absent. This is the appropriate workflow for reproducing the complete submission from the supplied raw dataset.
+Feature and graph caches are regenerated when absent. Notebook 02 also refreshes the deterministic compact review artifacts. This is the appropriate workflow for reproducing the complete submission from the supplied raw dataset.
 
 ### Fast Review
 
-With the submitted artifacts present, run:
+The repository includes the compact artifacts required by this path. After placing the original assignment dataset at `datasets/base.csv`, launch Jupyter from the repository root and run:
 
 ```text
 04 → 05
 ```
 
-This path uses `datasets/base.csv`, `results/split_indices.npz`, the classical feature cache, both models' metric files, and the four random/scaffold prediction files in `results/`. Missing inputs produce an actionable error naming the notebook that generates them.
+Notebook 04 validates the dataset against the committed ordered-molecule-ID hash and produces its final tables. Notebook 05 can then run in a fresh kernel; it uses only committed inputs plus the deterministic, inexpensive outputs of Notebook 04. Neither notebook uses ignored caches, filesystem timestamps, fitted model files, or state from notebooks 01–03.
 
 ## Runtime Expectations
 
@@ -201,13 +202,15 @@ The ensemble uses the validation-selected SchNet weight `w = 0.46`. The same fix
 ## Saved Artifacts
 
 - `results/split_indices.npz`: exact random and scaffold train/validation/test membership.
+- `outputs/artifacts/classical_analysis_features.npz`: compact size, geometry, molecular-weight, scaffold, and dataset-identity arrays required by notebooks 04–05.
+- `outputs/artifacts/classical_analysis_morgan.npz`: compressed fingerprints used only for Notebook 05's chemical-novelty analysis.
 - `results/models/classical_best_random.joblib` and `classical_best_scaffold.joblib`: selected fitted classical pipelines.
 - `results/models/schnet_best_random.pt` and `schnet_best_scaffold.pt`: selected SchNet checkpoints.
 - `results/classical_predictions_random.csv` and `classical_predictions_scaffold.csv`: aligned classical validation/test predictions.
 - `results/schnet_predictions_random.csv` and `schnet_predictions_scaffold.csv`: aligned SchNet validation/test predictions.
 - `results/final_predictions_validation.csv` and `final_predictions_*_test.csv`: aligned model/ensemble predictions used by the final analyses.
 - `results/classical_baselines.csv`, `schnet_metrics.csv`, and `final_model_comparison.csv`: experiment and consolidated metrics.
-- `outputs/cache/`: deterministic dense features, Morgan fingerprints, and serialized molecular graphs for the current dataset key.
+- `outputs/cache/`: ignored temporary dense features, fingerprints, and serialized graphs; these are not fast-review inputs.
 - `results/figures/`, `results/final_figures/`, and `outputs/additional_analysis/`: diagnostic, presentation, and technical-appendix outputs.
 
 ## Design Decisions

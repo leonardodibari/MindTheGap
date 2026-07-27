@@ -2,4 +2,4 @@ split,comparison,first_model,second_model,mean_paired_difference,ci_low,ci_high,
 random,LightGBM minus SchNet,LightGBM,SchNet,-0.00031118518084278374,-0.0005606808336342656,-5.406959882518906e-05,0.004
 random,Best individual minus Ensemble,LightGBM,Ensemble,0.001129280660103366,0.0010013545695618962,0.001261074606350846,1.0
 scaffold,LightGBM minus SchNet,LightGBM,SchNet,0.0018664479046875092,0.001578510646915621,0.0021530678688354223,1.0
-scaffold,Best individual minus Ensemble,SchNet,Ensemble,0.0002729970319852379,0.00010052945875001691,0.0004402881810168154,0.998
+scaffold,Best individual minus Ensemble,SchNet,Ensemble,0.00027299670094970904,0.00010052926250812087,0.0004402878759600823,0.998

@@ -5,6 +5,7 @@ numpy<2
 pandas
 rdkit==2023.9.1
 scikit-learn
+scipy
 torch
 torch-geometric
 jupyter

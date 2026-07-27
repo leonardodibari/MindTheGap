@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
+import hashlib
 from pathlib import Path
 
 import numpy as np
@@ -15,10 +16,18 @@ def require_artifact(path: Path, generated_by: str) -> Path:
     """Return an artifact path or raise an actionable workflow error."""
     if path.exists():
         return path
+    committed_review_input = "outputs/artifacts" in path.as_posix()
+    expectation = (
+        "This compact review artifact should normally be present in a fresh clone. "
+        "Restore it from Git; for full reproduction, regenerate it by running"
+        if committed_review_input else
+        "This generated workflow artifact is required. Create it by running"
+    )
     raise FileNotFoundError(
         f"Required artifact not found:\n{path}\n\n"
-        f"Generate it by running:\n{generated_by}\n\n"
-        f"Recommended execution order:\n{NOTEBOOK_ORDER}"
+        f"Why it is required: notebooks 04/05 consume saved analysis inputs without training.\n"
+        f"{expectation}:\n{generated_by}\n\n"
+        f"Recommended full-reproduction order:\n{NOTEBOOK_ORDER}"
     )
 
 
@@ -32,8 +41,52 @@ def load_required_numpy(path: Path, generated_by: str, **kwargs):
     return np.load(require_artifact(path, generated_by), **kwargs)
 
 
+def ordered_id_hash(ids: Iterable[object]) -> str:
+    """Return a stable, boundary-safe SHA-256 hash for ordered molecule IDs."""
+    digest = hashlib.sha256()
+    for value in ids:
+        encoded = str(value).encode("utf-8")
+        digest.update(len(encoded).to_bytes(8, "big"))
+        digest.update(encoded)
+    return digest.hexdigest()
+
+
+def validate_analysis_features(artifact, labeled: pd.DataFrame) -> None:
+    """Validate the committed classical-analysis artifact against the supplied dataset."""
+    required = {"X_size", "X_geometry", "molecular_weight", "scaffolds", "row_count", "ordered_mol_id_sha256"}
+    missing = required.difference(artifact.files)
+    if missing:
+        raise ValueError(f"Analysis feature artifact is missing keys: {sorted(missing)}")
+    n_rows = len(labeled)
+    stored_rows = int(np.asarray(artifact["row_count"]).item())
+    stored_hash = str(np.asarray(artifact["ordered_mol_id_sha256"]).item())
+    observed_hash = ordered_id_hash(labeled[ID_COLUMN])
+    if stored_rows != n_rows or stored_hash != observed_hash:
+        raise ValueError(
+            "The committed analysis artifact is incompatible with datasets/base.csv: "
+            f"expected {stored_rows} labeled rows and ordered-ID hash {stored_hash}, "
+            f"found {n_rows} rows and {observed_hash}. Use the original assignment dataset "
+            "or regenerate the artifact with notebooks/02_classical_baselines.ipynb."
+        )
+    expected_shapes = {
+        "X_size": (n_rows, 13), "X_geometry": (n_rows, 7),
+        "molecular_weight": (n_rows,), "scaffolds": (n_rows,),
+    }
+    for key, shape in expected_shapes.items():
+        if artifact[key].shape != shape:
+            raise ValueError(f"Analysis feature {key!r} has shape {artifact[key].shape}; expected {shape}")
+    for key in ("X_size", "X_geometry", "molecular_weight"):
+        if not np.isfinite(artifact[key]).all():
+            raise ValueError(f"Analysis feature {key!r} contains NaN or infinite values")
+
+
 def load_dataset(path: Path = DATA_PATH) -> pd.DataFrame:
     """Load the molecular dataset and normalize its identifier column."""
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Required assignment dataset not found: {path}\n"
+            "Copy the original supplied file to datasets/base.csv before running the notebooks."
+        )
     frame = pd.read_csv(path)
     if ID_COLUMN not in frame and str(frame.columns[0]).startswith("Unnamed"):
         frame = frame.rename(columns={frame.columns[0]: ID_COLUMN})
