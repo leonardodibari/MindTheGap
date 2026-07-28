@@ -96,9 +96,9 @@ def bootstrap_model_comparison(
                 "estimate": estimate, "ci_low": np.quantile(samples, .025),
                 "ci_high": np.quantile(samples, .975)})
     comparisons = [
-        ("LightGBM minus SchNet", "LightGBM", "SchNet"),
-        ("Best individual minus Ensemble",
-         min(["LightGBM", "SchNet"], key=lambda name: np.abs(errors[name]).mean()), "Ensemble"),
+        ("SchNet minus LightGBM", "SchNet", "LightGBM"),
+        ("Ensemble minus LightGBM", "Ensemble", "LightGBM"),
+        ("Ensemble minus SchNet", "Ensemble", "SchNet"),
     ]
     paired_rows = []
     for label, first, second in comparisons:
@@ -109,4 +109,3 @@ def bootstrap_model_comparison(
             "ci_low": np.quantile(difference, .025), "ci_high": np.quantile(difference, .975),
             "bootstrap_proportion_favoring_second": (difference > 0).mean()})
     return pd.DataFrame(metric_rows), pd.DataFrame(paired_rows)
-
