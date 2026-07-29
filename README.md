@@ -44,7 +44,7 @@ Create a folder 'datasets' in the 'MindTheGap' folder and copy the original assi
 
 ## Execution
 
-For a fast scientific review, run only notebooks:
+For a fast scientific review, run only notebooks using the '.venv (Python 3.11.15)' kernel from the Python environment:
 
 ```text
 01 → 04 → 05 → 06
@@ -52,7 +52,7 @@ For a fast scientific review, run only notebooks:
 
 This path performs data analysis, then uses generated and committed prediction tables and compact analysis artifacts. It does not load fitted models or retrain LightGBM or SchNet.
 
-Notebook 06 is independent of kernel state and may be run after Notebook 01 to regenerate all PowerPoint figures in `outputs/presentation_figures/`.
+Notebook 06 is independent of kernel state and may be run directly after Notebook 01 to regenerate all PowerPoint figures in `outputs/presentation_figures/`.
 
 
 For the full analysis and model training instead run the scientific workflow in order:
