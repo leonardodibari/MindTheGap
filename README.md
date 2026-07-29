@@ -4,7 +4,7 @@
 
 This project predicts the molecular HOMO–LUMO energy gap from the lowest-energy conformer supplied in `json_conformer`. Predictive inputs are restricted to that conformer; identifiers, the target, and other supplied quantum-mechanical properties are excluded to prevent leakage.
 
-The workflow compares classical molecular representations with a geometry-aware SchNet model on fixed random and Bemis–Murcko scaffold splits. A validation-selected LightGBM–SchNet ensemble provides the final prediction. The emphasis is on scientific reasoning, reproducible comparisons, and analysis of model errors rather than broad hyperparameter search.
+The workflow compares classical molecular representations with a geometry-aware SchNet model on fixed random and Bemis–Murcko scaffold splits. A validation-selected LightGBM–SchNet ensemble provides the final prediction.
 
 ## Repository structure
 
@@ -40,7 +40,7 @@ conda env create --prefix ./.venv -f environment.yml
 conda activate ./.venv
 ```
 
-Copy the original assignment dataset to `datasets/base.csv`. It is not committed because it exceeds GitHub's per-file size limit. No external download is required.
+Create a folder 'datasets' in the 'MindTheGap' folder and copy the original assignment dataset to `datasets/base.csv`. It is not committed because it exceeds GitHub's per-file size limit. No external download is required.
 
 ## Execution
 
